@@ -2,6 +2,7 @@ package com.delai.service;
 
 import java.util.List;
 
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,22 @@ public class ProductService {
 	
 	public void delete(Long id) {
 	 	productRepository.deleteById(id);
+	}
+
+	public Product update(Product product, Long id) {
+		var productFound = productRepository.findById(id);
+		
+		if (!productFound.isPresent()) {
+			throw new ObjectNotFoundException(id, "Product");
+		}
+		
+		productFound.get().setName(product.getName());
+		productFound.get().setDescription(product.getDescription());
+		productFound.get().setPrice(product.getPrice());
+		productFound.get().setPromoPrice(product.getPromoPrice());
+		productFound.get().setOptionsLists(product.getOptionsLists());
+		
+		return productRepository.save(productFound.get());
 	}
 	
 }
