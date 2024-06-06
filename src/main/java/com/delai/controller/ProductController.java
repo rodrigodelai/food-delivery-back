@@ -13,38 +13,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.delai.model.Banner;
-import com.delai.service.BannerService;
+import com.delai.model.Product;
+import com.delai.service.ProductService;
 
 @RestController
-@RequestMapping("/banner")
-public class BannerController {
+@RequestMapping("/product")
+public class ProductController {
 
 	@Autowired
-	private BannerService bannerService;
+	private ProductService productService;
 	
 	@PostMapping
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public Banner create(@RequestBody Banner banner) {
-		return bannerService.create(banner);
+	public Product create(@RequestBody Product product) {
+		return productService.create(product);
 	}
 	
 	@GetMapping
 	@ResponseStatus(code = HttpStatus.OK)
-	public List<Banner> list() {
-		return bannerService.list();
+	public List<Product> list() {
+		return productService.list();
 	}
 	
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
-	public Banner findById(@PathVariable Long id) {
-		return bannerService.findById(id);
+	public Product findById(@PathVariable Long id) {
+		return productService.findById(id);
 	}
 	
 	@DeleteMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable Long id) {
-		bannerService.delete(id);
+		productService.delete(id);
 	}
 	
 }
