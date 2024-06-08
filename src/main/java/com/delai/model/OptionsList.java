@@ -1,7 +1,6 @@
 package com.delai.model;
 
-import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -15,21 +14,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "products")
+@Table(name = "options_list")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+@AllArgsConstructor
+public class OptionsList {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	private String name;
-	private String description;
-	private BigDecimal price;
-	private BigDecimal promoPrice;
 	
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	private List<OptionsList> optionsLists;
+	private Set<Option> options;
 	
 }

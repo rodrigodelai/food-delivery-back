@@ -1,6 +1,7 @@
 package com.delai.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,10 @@ public class ImageService {
 	
     public void deleteImage(String imageName) {
 		imageRepository.deleteByName(imageName);
+	}
+
+	public List<String> listImages() {
+		return imageRepository.findAll().stream().map(image -> image.getName()).toList();
 	}
 
 }

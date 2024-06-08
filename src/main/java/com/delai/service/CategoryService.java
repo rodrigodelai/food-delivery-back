@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.delai.model.Category;
-import com.delai.projection.CategoryProjection;
 import com.delai.repository.CategoryRepository;
 import com.delai.repository.ProductRepository;
 
@@ -22,8 +21,15 @@ public class CategoryService {
 		return categoryRepository.save(category);
 	}
 	
-	public List<CategoryProjection> list() {
-		return categoryRepository.findAllCustom();
+	public List<Category> list(Boolean projection) {
+		
+		if (projection)
+			return categoryRepository.findAllCustom()
+					.stream()
+					.map(category -> new Category(category.getId(), category.getName(), null))
+					.toList();
+		
+		return categoryRepository.findAll();
 	}
 	
 	public Category findById(Long id) {
@@ -43,6 +49,14 @@ public class CategoryService {
 		
 		return categoryRepository.save(category);
 		
+	}
+
+	public List<Category> createMultiple(List<Category> categories) {
+		return categoryRepository.saveAll(categories);
+	}
+
+	public void deleteAll() {
+		categoryRepository.deleteAll();
 	}
 	
 }

@@ -8,49 +8,56 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.delai.model.Banner;
-import com.delai.service.BannerService;
+import com.delai.model.Option;
+import com.delai.service.OptionService;
 
 @RestController
-@RequestMapping("/banner")
-public class BannerController {
+@RequestMapping("option")
+public class OptionController {
 
 	@Autowired
-	private BannerService bannerService;
-	
-	@PostMapping
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public Banner create(@RequestBody Banner banner) {
-		return bannerService.create(banner);
-	}
-	
-	@PostMapping("/multiple")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public List<Banner> createMultiple(@RequestBody List<Banner> banners) {
-		return bannerService.createMultiple(banners);
-	}
+	private OptionService optionService;
 	
 	@GetMapping
 	@ResponseStatus(code = HttpStatus.OK)
-	public List<Banner> list() {
-		return bannerService.list();
+	public List<Option> list() {
+		return optionService.list();
 	}
 	
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
-	public Banner findById(@PathVariable Long id) {
-		return bannerService.findById(id);
+	public Option read(@PathVariable Long id) {
+		return optionService.findById(id);
+	}
+	
+	@PostMapping()
+	public Option create(@RequestBody Option option) {
+		return optionService.create(option);
+	}
+	
+	@PostMapping("/multiple")
+	public List<Option> createMultiple(@RequestBody List<Option> options) {
+		return optionService.createMultiple(options);
 	}
 	
 	@DeleteMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable Long id) {
-		bannerService.delete(id);
+		optionService.delete(id);
 	}
 	
+	@DeleteMapping
+	public void deleteAll() {
+		optionService.deleteAll();
+	}
+	
+	@PutMapping("/{id}")
+	public Option update(@RequestBody Option option, @PathVariable Long id) {
+		return optionService.update(option, id);
+	}
 }

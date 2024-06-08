@@ -29,5 +29,9 @@ public class BannerService {
 	public void delete(Long id) {
 		bannerRepository.deleteById(id);
 	}
+
+	public List<Banner> createMultiple(List<Banner> banners) {
+		return bannerRepository.saveAll(banners);
+	}
 	
 }

@@ -15,6 +15,9 @@ public class ProductService {
 	@Autowired
 	private ProductRepository productRepository;
 	
+	@Autowired
+	private OptionsListService optionsListService;
+	
 	public Product create(Product product) {
 		return productRepository.save(product);
 	}
@@ -45,6 +48,24 @@ public class ProductService {
 		productFound.get().setOptionsLists(product.getOptionsLists());
 		
 		return productRepository.save(productFound.get());
+	}
+
+	public Product addOptionsLists(List<Long> optionsListsIds, Long productId) {
+		var product = productRepository.findById(productId).get();
+		
+		optionsListsIds.forEach(optionsListId -> {
+			product.getOptionsLists().add(optionsListService.findById(optionsListId));
+		});
+		
+		return productRepository.save(product);
+	}
+
+	public List<Product> createMultiple(List<Product> products) {
+		return productRepository.saveAll(products);
+	}
+
+	public void deleteAll() {
+		productRepository.deleteAll();
 	}
 	
 }

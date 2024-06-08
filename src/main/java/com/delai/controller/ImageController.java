@@ -1,6 +1,7 @@
 package com.delai.controller;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,12 @@ public class ImageController {
 	@ResponseStatus(code = HttpStatus.OK)
 	public String upload(@RequestParam("image") MultipartFile file) throws IOException {
 		return imageService.uploadImage(file);
+	}
+	
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<String> list() {
+		return imageService.listImages();
 	}
 	
 	@GetMapping("/{imageName}")
