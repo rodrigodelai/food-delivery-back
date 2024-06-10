@@ -19,20 +19,12 @@ public class OptionsListService {
 	@Autowired
 	private OptionRepository optionRepository;
 	
-	public List<OptionsList> list() {
-		return optionsListRepository.findAll();
-	}
-	
 	public OptionsList create(OptionsList optionsList) {
 		return optionsListRepository.save(optionsList);
 	}
 	
-	public OptionsList findById(Long id) {
+	public OptionsList read(Long id) {
 		return optionsListRepository.findById(id).get();
-	}
-	
-	public void delete(Long id) {
-		optionsListRepository.deleteById(id);
 	}
 	
 	public OptionsList update(OptionsList optionsList, Long id) {
@@ -47,9 +39,25 @@ public class OptionsListService {
 		
 		return optionsListRepository.save(optionsListFound.get());
 	}
+	
+	public void delete(Long id) {
+		optionsListRepository.deleteById(id);
+	}
+	
+	public List<OptionsList> createMultiple(List<OptionsList> optionsLists) {
+		return optionsListRepository.saveAll(optionsLists);
+	}
+	
+	public List<OptionsList> list() {
+		return optionsListRepository.findAll();
+	}
+	
+	public void deleteMultiple(List<Long> optionsListIds) {
+		optionsListRepository.deleteAllById(optionsListIds);
+	}	
 
 	public OptionsList addProducts(List<Long> optionsIds, Long optionsListId) {
-		var optionsList = optionsListRepository.findById(optionsListId).get();
+		var optionsList = optionsListRepository.findById(optionsListId).orElseThrow();
 		
 		optionsIds.forEach(options -> {
 			optionsList.getOptions().add(optionRepository.findById(options).get());
@@ -57,14 +65,5 @@ public class OptionsListService {
 		
 		return optionsListRepository.save(optionsList);
 	}
-
-	public List<OptionsList> createMultiple(List<OptionsList> optionsLists) {
-		return optionsListRepository.saveAll(optionsLists);
-	}
-
-	public void deleteAll() {
-		optionsListRepository.deleteAll();
-	}
-	
 	
 }

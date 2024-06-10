@@ -26,8 +26,8 @@ public class ProductService {
 		return productRepository.findAll();
 	}
 	
-	public Product findById(Long id) {
-		return productRepository.findById(id).get();
+	public Product read(Long id) {
+		return productRepository.findById(id).orElseThrow();
 	}
 	
 	public void delete(Long id) {
@@ -54,7 +54,7 @@ public class ProductService {
 		var product = productRepository.findById(productId).get();
 		
 		optionsListsIds.forEach(optionsListId -> {
-			product.getOptionsLists().add(optionsListService.findById(optionsListId));
+			product.getOptionsLists().add(optionsListService.read(optionsListId));
 		});
 		
 		return productRepository.save(product);
@@ -67,5 +67,9 @@ public class ProductService {
 	public void deleteAll() {
 		productRepository.deleteAll();
 	}
-	
+
+	public void deleteMultiple(List<Long> productIds) {
+		productRepository.deleteAllById(productIds);
+	}
+
 }

@@ -30,22 +30,10 @@ public class ProductController {
 		return productService.create(product);
 	}
 	
-	@PostMapping("/multiple")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public List<Product> createMultiple(@RequestBody List<Product> products) {
-		return productService.createMultiple(products);
-	}
-	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<Product> list() {
-		return productService.list();
-	}
-	
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
-	public Product findById(@PathVariable Long id) {
-		return productService.findById(id);
+	public Product read(@PathVariable Long id) {
+		return productService.read(id);
 	}
 	
 	@PutMapping("/{id}")
@@ -59,11 +47,23 @@ public class ProductController {
 	public void delete(@PathVariable Long id) {
 		productService.delete(id);
 	}
+		
+	@PostMapping("/multiple")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public List<Product> createMultiple(@RequestBody List<Product> products) {
+		return productService.createMultiple(products);
+	}
+	
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<Product> list() {
+		return productService.list();
+	}
 	
 	@DeleteMapping
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void deleteAll() {
-		productService.deleteAll();
+	public void deleteMultiple(@RequestBody List<Long> productIds) {
+		productService.deleteMultiple(productIds);
 	}
 	
 	@PostMapping("/{id}")

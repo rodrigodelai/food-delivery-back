@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -29,6 +30,24 @@ public class BannerController {
 		return bannerService.create(banner);
 	}
 	
+	@GetMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.OK)
+	public Banner read(@PathVariable Long id) {
+		return bannerService.read(id);
+	}
+	
+	@PutMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public Banner update(@RequestBody Banner banner, @PathVariable Long id) {
+		return bannerService.update(banner, id);
+	}
+	
+	@DeleteMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable Long id) {
+		bannerService.delete(id);
+	}
+
 	@PostMapping("/multiple")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public List<Banner> createMultiple(@RequestBody List<Banner> banners) {
@@ -41,16 +60,9 @@ public class BannerController {
 		return bannerService.list();
 	}
 	
-	@GetMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.OK)
-	public Banner findById(@PathVariable Long id) {
-		return bannerService.findById(id);
-	}
-	
-	@DeleteMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void delete(@PathVariable Long id) {
-		bannerService.delete(id);
+	@DeleteMapping
+	public void deleteMultiple(@RequestBody List<Long> bannerIds) {
+		bannerService.deleteMultiple(bannerIds);
 	}
 	
 }

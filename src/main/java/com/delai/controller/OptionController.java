@@ -24,26 +24,20 @@ public class OptionController {
 	@Autowired
 	private OptionService optionService;
 	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<Option> list() {
-		return optionService.list();
-	}
-	
-	@GetMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.OK)
-	public Option read(@PathVariable Long id) {
-		return optionService.findById(id);
-	}
-	
 	@PostMapping()
 	public Option create(@RequestBody Option option) {
 		return optionService.create(option);
 	}
 	
-	@PostMapping("/multiple")
-	public List<Option> createMultiple(@RequestBody List<Option> options) {
-		return optionService.createMultiple(options);
+	@GetMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.OK)
+	public Option read(@PathVariable Long id) {
+		return optionService.read(id);
+	}
+	
+	@PutMapping("/{id}")
+	public Option update(@RequestBody Option option, @PathVariable Long id) {
+		return optionService.update(option, id);
 	}
 	
 	@DeleteMapping("/{id}")
@@ -51,13 +45,20 @@ public class OptionController {
 		optionService.delete(id);
 	}
 	
-	@DeleteMapping
-	public void deleteAll() {
-		optionService.deleteAll();
+	@PostMapping("/multiple")
+	public List<Option> createMultiple(@RequestBody List<Option> options) {
+		return optionService.createMultiple(options);
 	}
 	
-	@PutMapping("/{id}")
-	public Option update(@RequestBody Option option, @PathVariable Long id) {
-		return optionService.update(option, id);
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<Option> list() {
+		return optionService.list();
 	}
+	
+	@DeleteMapping
+	public void deleteMultiple(@RequestBody List<Long> optionIds) {
+		optionService.deleteMultiple(optionIds);
+	}
+	
 }

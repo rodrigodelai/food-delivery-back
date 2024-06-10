@@ -17,7 +17,7 @@ public class ImageService {
 	@Autowired
 	private ImageRepository imageRepository;
 	
-	public String uploadImage(MultipartFile imageFile) throws IOException {
+	public String upload(MultipartFile imageFile) throws IOException {
         var imageToSave = new Image(null, imageFile.getOriginalFilename(), 
         							imageFile.getContentType(),imageFile.getBytes()); 
         	
@@ -26,7 +26,7 @@ public class ImageService {
         return "File uploaded: " + imageFile.getOriginalFilename();
     }
 
-    public byte[] downloadImage(String imageName) {
+    public byte[] download(String imageName) {
         Optional<Image> dbImage = imageRepository.findByName(imageName);
         
         if (dbImage.isPresent())
@@ -35,11 +35,11 @@ public class ImageService {
         return new byte[0];
     }
 	
-    public void deleteImage(String imageName) {
+    public void delete(String imageName) {
 		imageRepository.deleteByName(imageName);
 	}
 
-	public List<String> listImages() {
+	public List<String> list() {
 		return imageRepository.findAll().stream().map(image -> image.getName()).toList();
 	}
 

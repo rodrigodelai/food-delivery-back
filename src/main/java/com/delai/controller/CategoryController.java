@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,28 +24,22 @@ public class CategoryController {
 	@Autowired
 	private CategoryService categoryService;
 	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<Category> list(@RequestParam(name = "projection", required = false, defaultValue = "false") Boolean projection) {
-		return categoryService.list(projection);
-	}
-	
 	@PostMapping
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public Category create(@RequestBody Category category) {
 		return categoryService.create(category);
 	}
 	
-	@PostMapping("/multiple")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public List<Category> createMultiple(@RequestBody List<Category> categories) {
-		return categoryService.createMultiple(categories);
-	}
-	
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
 	public Category read(@PathVariable Long id) {
-		return categoryService.findById(id);
+		return categoryService.read(id);
+	}
+	
+	@PutMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public Category update(@RequestBody Category category, @PathVariable Long id) {
+		return categoryService.update(category, id);
 	}
 	
 	@DeleteMapping("/{id}")
@@ -54,22 +47,29 @@ public class CategoryController {
 	public void delete(@PathVariable Long id) {
 		categoryService.delete(id);
 	}
+		
+	@PostMapping("/multiple")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public List<Category> createMultiple(@RequestBody List<Category> categories) {
+		return categoryService.createMultiple(categories);
+	}
+	
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<Category> list() {
+		return categoryService.list();
+	}
 	
 	@DeleteMapping
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void deleteAll() {
-		categoryService.deleteAll();
+	public void deleteMultiple(@RequestBody List<Long> categoryIds) {
+		categoryService.deleteMultiple(categoryIds);
 	}
 	
-	@PutMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public void update(@RequestBody List<Long> productIds, @PathVariable(name = "id") Long categoryId) {
-		categoryService.addProducts(productIds, categoryId);
-	}
-
 	@PostMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public Category addProducts(@RequestBody List<Long> productIds, @PathVariable(name = "id") Long categoryId) {
 		return categoryService.addProducts(productIds, categoryId);
 	}
+	
 }

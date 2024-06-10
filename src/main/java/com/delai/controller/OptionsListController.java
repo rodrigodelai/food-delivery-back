@@ -24,28 +24,22 @@ public class OptionsListController {
 	@Autowired
 	private OptionsListService optionsListService;
 	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<OptionsList> list() {
-		return optionsListService.list();
-	}
-	
 	@PostMapping
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public OptionsList create(@RequestBody OptionsList optionsList) {
 		return optionsListService.create(optionsList);
 	}
 	
-	@PostMapping("/multiple")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public List<OptionsList> createMultiple(@RequestBody List<OptionsList> optionsLists) {
-		return optionsListService.createMultiple(optionsLists);
-	}
-	
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
 	public OptionsList read(@PathVariable Long id) {
-		return optionsListService.findById(id);
+		return optionsListService.read(id);
+	}
+	
+	@PutMapping("/{id}")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public OptionsList update(@RequestBody OptionsList optionsList, @PathVariable Long id) {
+		return optionsListService.update(optionsList, id);
 	}
 	
 	@DeleteMapping("/{id}")
@@ -54,16 +48,22 @@ public class OptionsListController {
 		optionsListService.delete(id);
 	}
 	
-	@DeleteMapping
-	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void deleteAll() {
-		optionsListService.deleteAll();
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<OptionsList> list() {
+		return optionsListService.list();
 	}
 	
-	@PutMapping("/{id}")
+	@PostMapping("/multiple")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public OptionsList update(@RequestBody OptionsList optionsList, @PathVariable Long id) {
-		return optionsListService.update(optionsList, id);
+	public List<OptionsList> createMultiple(@RequestBody List<OptionsList> optionsLists) {
+		return optionsListService.createMultiple(optionsLists);
+	}
+		
+	@DeleteMapping
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	public void deleteMultiple(@RequestBody List<Long> optionsListIds) {
+		optionsListService.deleteMultiple(optionsListIds);
 	}
 	
 	@PostMapping("/{id}")

@@ -18,20 +18,29 @@ public class BannerService {
 		return bannerRepository.save(banner);
 	}
 	
-	public List<Banner> list() {
-		return bannerRepository.findAll();
+	public Banner read(Long id) {
+		return bannerRepository.findById(id).get();
 	}
 	
-	public Banner findById(Long id) {
-		return bannerRepository.findById(id).get();
+	public Banner update(Banner banner, Long id) {
+		banner.setId(id);
+		return bannerRepository.save(banner);
 	}
 	
 	public void delete(Long id) {
 		bannerRepository.deleteById(id);
 	}
-
+	
 	public List<Banner> createMultiple(List<Banner> banners) {
 		return bannerRepository.saveAll(banners);
+	}
+	
+	public List<Banner> list() {
+		return bannerRepository.findAll();
+	}
+	
+	public void deleteMultiple(List<Long> bannerIds) {
+		bannerRepository.deleteAllById(bannerIds);
 	}
 	
 }

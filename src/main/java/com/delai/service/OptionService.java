@@ -15,20 +15,12 @@ public class OptionService {
 	@Autowired
 	private OptionRepository optionRepository;
 	
-	public List<Option> list() {
-		return optionRepository.findAll();
-	}
-	
 	public Option create(Option option) {
 		return optionRepository.save(option);
 	}
-	
-	public Option findById(Long id) {
-		return optionRepository.findById(id).get();
-	}
-	
-	public void delete(Long id) {
-		optionRepository.deleteById(id);
+
+	public Option read(Long id) {
+		return optionRepository.findById(id).orElseThrow();
 	}
 	
 	public Option update(Option option, Long id) {
@@ -44,13 +36,21 @@ public class OptionService {
 		
 		return optionRepository.save(optionFound.get());
 	}
-
+	
+	public void delete(Long id) {
+		optionRepository.deleteById(id);
+	}
+	
 	public List<Option> createMultiple(List<Option> options) {
 		return optionRepository.saveAll(options);
 	}
+	
+	public List<Option> list() {
+		return optionRepository.findAll();
+	}
 
-	public void deleteAll() {
-		optionRepository.deleteAll();
+	public void deleteMultiple(List<Long> ids) {
+		optionRepository.deleteAllById(ids);
 	}
 	
 }

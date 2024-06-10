@@ -28,25 +28,25 @@ public class ImageController {
 	
 	@PostMapping()
 	@ResponseStatus(code = HttpStatus.OK)
-	public String upload(@RequestParam("image") MultipartFile file) throws IOException {
-		return imageService.uploadImage(file);
-	}
-	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<String> list() {
-		return imageService.listImages();
+	public String create(@RequestParam("image") MultipartFile file) throws IOException {
+		return imageService.upload(file);
 	}
 	
 	@GetMapping("/{imageName}")
-	public ResponseEntity<byte[]> download(@PathVariable String imageName) {
-		return ResponseEntity.ok().contentType(MediaType.valueOf("image/webp")).body(imageService.downloadImage(imageName));
+	public ResponseEntity<byte[]> read(@PathVariable String imageName) {
+		return ResponseEntity.ok().contentType(MediaType.valueOf("image/webp")).body(imageService.download(imageName));
 	}
 	
 	@DeleteMapping("/{imageName}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable String imageName) {
-		imageService.deleteImage(imageName);
+		imageService.delete(imageName);
+	}
+	
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<String> list() {
+		return imageService.list();
 	}
 	
 }

@@ -2,6 +2,7 @@ package com.delai.service;
 
 import java.util.List;
 
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ public class CategoryService {
 
 	@Autowired
 	private CategoryRepository categoryRepository;
+	
 	@Autowired
 	private ProductRepository productRepository;
 	
@@ -21,42 +23,48 @@ public class CategoryService {
 		return categoryRepository.save(category);
 	}
 	
-	public List<Category> list(Boolean projection) {
-		
-		if (projection)
-			return categoryRepository.findAllCustom()
-					.stream()
-					.map(category -> new Category(category.getId(), category.getName(), null))
-					.toList();
-		
-		return categoryRepository.findAll();
+	public Category read(Long id) {
+		return categoryRepository.findById(id).get();
 	}
 	
-	public Category findById(Long id) {
-		return categoryRepository.findById(id).get();
+	public Category update(Category category, Long id) {
+		var categoryFound = categoryRepository.findById(id);
+		
+		if (!categoryFound.isPresent()) {
+			throw new ObjectNotFoundException(id, "Category");
+		}
+		
+		categoryFound.get().setName(category.getName());
+		categoryFound.get().setProducts(category.getProducts());
+		
+		return categoryRepository.save(categoryFound.get());
 	}
 	
 	public void delete(Long id) {
 		categoryRepository.deleteById(id);
 	}
-
-	public Category addProducts(List<Long> productIds, Long categoryId) {
-		var category = categoryRepository.findById(categoryId).get();
-		
-		productIds.forEach(product -> {
-			category.getProducts().add(productRepository.findById(product).get());
-		});
-		
-		return categoryRepository.save(category);
-		
-	}
-
+	
 	public List<Category> createMultiple(List<Category> categories) {
 		return categoryRepository.saveAll(categories);
 	}
-
-	public void deleteAll() {
-		categoryRepository.deleteAll();
+	
+	public List<Category> list() {	
+		return categoryRepository.findAll();
+	}
+	
+	public void deleteMultiple(List<Long> categoryIds) {
+		categoryRepository.deleteAllById(categoryIds);
+	}
+	
+	public Category addProducts(List<Long> productIds, Long categoryId) {
+		var category = categoryRepository.findById(categoryId).orElseThrow();
+		var products = category.getProducts();
+		
+		productIds.forEach(product -> {
+			products.add(productRepository.findById(product).get());
+		});
+		
+		return categoryRepository.save(category);
 	}
 	
 }
