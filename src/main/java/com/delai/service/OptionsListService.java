@@ -1,6 +1,7 @@
 package com.delai.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class OptionsListService {
 		
 		if (!potentialMatches.get().isEmpty()) {
 			
-			var match = potentialMatches.get().stream().filter(ol -> ol.getOptions().equals(optionsList.getOptions())).toList();
+			var match = potentialMatches.get().stream().filter(ol -> ol.getOptions().equals(optionsList.getOptions() != null ? optionsList.getOptions() : new HashSet<>())).toList();
 			
 			if (!match.isEmpty()) {
 				logger.debug("OptionsList alredy exists: " + match.get(0).getName());

@@ -1,6 +1,7 @@
 package com.delai.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,7 @@ public class CategoryService {
 		logger.debug("Potential matches: " + potentialMatches.get().stream().map(pm -> pm.getId()).toList().toString());
 		
 		if (!potentialMatches.get().isEmpty()) {
-			var match = potentialMatches.get().stream().filter(cat -> cat.getProducts().equals(category.getProducts())).toList();
+			var match = potentialMatches.get().stream().filter(cat -> cat.getProducts().equals(category.getProducts() != null ? category.getProducts() : new HashSet<>())).toList();
 			
 			if (!match.isEmpty()) {
 				logger.debug("Category alredy exists: " + match.get(0).getName());
