@@ -48,16 +48,16 @@ public class OptionsListController {
 		optionsListService.delete(id);
 	}
 	
-	@GetMapping
-	@ResponseStatus(code = HttpStatus.OK)
-	public List<OptionsList> list() {
-		return optionsListService.list();
-	}
-	
 	@PostMapping("/multiple")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public List<OptionsList> createMultiple(@RequestBody List<OptionsList> optionsLists) {
 		return optionsListService.createMultiple(optionsLists);
+	}
+	
+	@GetMapping
+	@ResponseStatus(code = HttpStatus.OK)
+	public List<OptionsList> list() {
+		return optionsListService.list();
 	}
 		
 	@DeleteMapping
@@ -68,7 +68,7 @@ public class OptionsListController {
 	
 	@PostMapping("/{id}")
 	public OptionsList addOptions(@RequestBody List<Long> optionsIds, @PathVariable(name = "id") Long optionsListId) {
-		return optionsListService.addProducts(optionsIds, optionsListId);
+		return optionsListService.addOptions(optionsIds, optionsListId);
 	}
 	
 }
