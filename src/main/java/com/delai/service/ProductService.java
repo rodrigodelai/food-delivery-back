@@ -3,9 +3,6 @@ package com.delai.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.ObjectNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,91 +10,90 @@ import com.delai.model.Product;
 import com.delai.repository.CategoryRepository;
 import com.delai.repository.ProductRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class ProductService {
 
+	@Autowired
+	private CategoryRepository categoryRepository;
+	
 	@Autowired
 	private ProductRepository productRepository;
 	
 	@Autowired
 	private OptionsListService optionsListService;
 	
-	@Autowired
-	private CategoryRepository categoryRepository;
 	
-	private Logger logger = LoggerFactory.getLogger(ProductService.class);
-	
-	public Product create(Product product) {		
-		// Check if Product with the same attributes already exists
-		logger.debug("Checking if product already exists...");
-		
-		var productFound = productRepository.findByNameAndDescription(product.getName(), product.getDescription());
-		
-		if (!productFound.get().isEmpty()) {
-			logger.debug("Product alredy exists: " + productFound.get().get(0).getName());
-			
-			return productFound.get().get(0);
-		}
-		
-		// If not, first create its children
-		logger.debug("No match found. Creating product...");
-		
+	@Transactional
+	public Product create(Product product) {
+		// Check if its children already exists
 		if (product.getOptionsLists() != null) {
-			logger.debug("Creating options lists...");
-			
-			var optionsLists = product.getOptionsLists().stream().map(optionsListService::create).toList();
-			product.setOptionsLists(optionsLists);			
+			var optionsLists = product.getOptionsLists().stream().map(ol -> optionsListService.read(ol.getId())).toList();
+			product.setOptionsLists(optionsLists);
 		}
+				
+		// Check if record with the same attributes already exists
+		var productFound = this.find(product);
 		
-		// Then, save it
-		logger.debug("Saving product...");
+		if (productFound != null)
+			throw new RuntimeException("409 (Conflict) - Record already exists: '" + productFound.getName() + " # " + productFound.getId() + "'.");
 		
+		// If it's all good, save it
+		product.setId(null);
 		return productRepository.save(product);
 	}
 	
 	public Product read(Long id) {
-		return productRepository.findById(id).orElseThrow();
+		return productRepository.findById(id).orElseThrow(() -> new RuntimeException("404 (NotFound) - Record with the given ID was not found: '# " + id + "'."));
+	}
+	
+	public Product find(Product product) {
+		var productFound = productRepository.findByNameAndDescription(product.getName(), product.getDescription()).orElse(new ArrayList<>());
+		
+		if (!productFound.isEmpty())
+			return productFound.get(0);
+		
+		return null;
 	}
 	
 	public Product update(Product product, Long id) {
-		var productFound = productRepository.findById(id);
+		var productFound = this.read(id);
+		productFound.setOptionsLists(null);
 		
-		if (productFound.isEmpty())
-			throw new ObjectNotFoundException(id, "Product");
+		// Check if its children already exists
+		if (product.getOptionsLists() != null) {
+			var optionsLists = product.getOptionsLists().stream().map(ol -> optionsListService.read(ol.getId())).toList();
+			productFound.setOptionsLists(optionsLists);
+		}
 		
-		productFound.get().setName(product.getName());
-		productFound.get().setDescription(product.getDescription());
-		productFound.get().setPrice(product.getPrice());
-		productFound.get().setPromoPrice(product.getPromoPrice());
-		productFound.get().setOptionsLists(product.getOptionsLists());
+		// Copy new values
+		productFound.setName(product.getName());
+		productFound.setDescription(product.getDescription());
+		productFound.setPrice(product.getPrice());
+		productFound.setPromoPrice(product.getPromoPrice());
 		
-		return productRepository.save(productFound.get());
+		// Check if record with the same attributes already exists
+		var newProductFound = this.find(productFound);
+		
+		if (newProductFound != null && !newProductFound.getId().equals(id))
+			throw new RuntimeException("409 (Conflict) - Record alredy exists: '" + newProductFound.getName() + " # " + newProductFound.getId() + "'.");
+
+		// If it's all good, save it
+		return productRepository.save(productFound);
 	}	
 	
 	public void delete(Long id) {
 		// First, delete the associations
-		logger.debug("Deleting associations...");
-		
-		var productFound = read(id);
-		removeOptionsListsFromProduct(productFound);
-		removeProductFromCategories(productFound);
+		var productFound = this.read(id);
+		this.removeOptionsListsFromProduct(productFound);
+		this.removeProductFromCategories(productFound);
 		
 		// Then, delete it
-		logger.debug("Deleting product...");
-		
 	 	productRepository.delete(productFound);
 	}
 
-	public Product addOptionsLists(List<Long> optionsListsIds, Long productId) {
-		var product = productRepository.findById(productId).orElseThrow(() -> new ObjectNotFoundException(productId, "Product"));
-		
-		optionsListsIds.forEach(optionsListId -> {
-			product.getOptionsLists().add(optionsListService.read(optionsListId));
-		});
-		
-		return productRepository.save(product);
-	}
-
+	@Transactional
 	public List<Product> createMultiple(List<Product> products) {
 		List<Product> saved = new ArrayList<>();
 		products.forEach(product -> saved.add(create(product)));
@@ -112,17 +108,27 @@ public class ProductService {
 		productIds.forEach(this::delete);
 	}
 	
+	public Product addOptionsLists(List<Long> optionsListsIds, Long productId) {
+		var product = this.read(productId);
+		
+		optionsListsIds.forEach(optionsListId -> {
+			product.getOptionsLists().add(optionsListService.read(optionsListId));
+		});
+		
+		return productRepository.save(product);
+	}
+	
 	private void removeOptionsListsFromProduct(Product product) {
 		product.setOptionsLists(null);
 		productRepository.save(product);
 	}
 	
-	private void removeProductFromCategories(Product productFound) {
-		var categories = categoryRepository.findByProduct(productFound);
+	private void removeProductFromCategories(Product product) {
+		var categories = categoryRepository.findByProduct(product).orElse(new ArrayList<>());
 
-		if (categories.isPresent()) {
-			categories.get().forEach(category -> {
-				category.getProducts().remove(productFound);
+		if (!categories.isEmpty()) {
+			categories.forEach(category -> {
+				category.getProducts().remove(product);
 				categoryRepository.save(category);
 			});			
 		}	

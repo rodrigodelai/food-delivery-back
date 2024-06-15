@@ -2,7 +2,6 @@ package com.delai.model;
 
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,7 +24,7 @@ public class Category {
 	private Long id;
 	private String name;
 	
-	@ManyToMany(cascade = CascadeType.PERSIST)
+	@ManyToMany
 	private Set<Product> products;
 	
 }

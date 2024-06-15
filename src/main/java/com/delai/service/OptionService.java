@@ -3,9 +3,6 @@ package com.delai.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.ObjectNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,66 +11,63 @@ import com.delai.model.OptionsList;
 import com.delai.repository.OptionRepository;
 import com.delai.repository.OptionsListRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class OptionService {
 
 	@Autowired
-	private OptionRepository optionRepository;
-	
-	@Autowired
 	private OptionsListRepository optionsListRepository;
 	
-	private Logger logger = LoggerFactory.getLogger(OptionService.class);
+	@Autowired
+	private OptionRepository optionRepository;
 	
+	@Transactional
 	public Option create(Option option) {
+		// Check if record with the same attributes already exists
+		var optionFound = this.find(option);
 		
-		// Check if option with the same attributes already exists
-		logger.debug("Checking if option already exists...");
-		
-		var optionFound = optionRepository.findByNameAndPriceAndImageName(option.getName(), option.getPrice(), option.getImageName());
-		
-		if (!optionFound.get().isEmpty()) {
-			logger.debug("Option alredy exists: " + optionFound.get().get(0).getName());
+		if (optionFound != null)
+			throw new RuntimeException("409 (Conflict) - Record already exists: " + optionFound.getName() + ".");
 			
-			return optionFound.get().get(0);			
-		}
-		
-		// If not, create it
-		logger.debug("No match found. Saving option...");
-		
+		// If it's all good, save it
+		option.setId(null);
 		return optionRepository.save(option);
 	}
 
 	public Option read(Long id) {
-		return optionRepository.findById(id).orElseThrow();
+		return optionRepository.findById(id).orElseThrow(() -> new RuntimeException("404 (NotFound) - Record with the given ID was not found: '# " + id + "'."));
+	}
+	
+	public Option find(Option option) {
+		var optionFound = optionRepository.findByNameAndPriceAndImageName(option.getName(), option.getPrice(), option.getImageName()).orElse(new ArrayList<>());
+		
+		if (!optionFound.isEmpty())
+			return optionFound.get(0);			
+		
+		return null;
 	}
 	
 	public Option update(Option option, Long id) {
-		var optionFound = optionRepository.findById(id);
+		var optionFound = this.read(id);
 		
-		if (!optionFound.isPresent()) {
-			throw new ObjectNotFoundException(id, "Option");
-		}
+		optionFound.setName(option.getName());
+		optionFound.setPrice(option.getPrice());
+		optionFound.setImageName(option.getImageName());
 		
-		optionFound.get().setName(option.getName());
-		optionFound.get().setPrice(option.getPrice());
-		optionFound.get().setImageName(option.getImageName());
-		
-		return optionRepository.save(optionFound.get());
+		return optionRepository.save(optionFound);
 	}
 	
 	public void delete(Long id) {
 		// First, delete the associations
-		logger.debug("Deleting associations...");
-		
-		removeOptionFromLists(read(id));
+		var option = this.read(id);
+		this.removeOptionFromLists(option);
 		
 		// Then, delete it
-		logger.debug("Deleting option...");
-		
 		optionRepository.deleteById(id);
 	}
 	
+	@Transactional
 	public List<Option> createMultiple(List<Option> options) {
 		List<Option> saved = new ArrayList<>();
 		options.forEach(option -> saved.add(create(option)));
@@ -89,7 +83,7 @@ public class OptionService {
 	}
 	
     private void removeOptionFromLists(Option option) {
-        var optionsLists = optionsListRepository.findByOption(option).orElseThrow(() -> new ObjectNotFoundException(option.getId(), "OptionsList"));
+        var optionsLists = optionsListRepository.findByOption(option).orElse(new ArrayList<>());
 
         for (OptionsList optionsList : optionsLists) {
             optionsList.getOptions().remove(option);

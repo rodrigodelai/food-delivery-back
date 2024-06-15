@@ -23,7 +23,7 @@ public class ImageService {
         	
         imageRepository.save(imageToSave);
         
-        return "File uploaded: " + imageFile.getOriginalFilename();
+        return "File uploaded: " + imageFile.getOriginalFilename() + " (" + imageFile.getSize() + " bytes).";
     }
 
     public byte[] download(String imageName) {

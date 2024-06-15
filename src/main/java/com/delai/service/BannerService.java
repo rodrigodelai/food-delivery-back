@@ -19,7 +19,7 @@ public class BannerService {
 	}
 	
 	public Banner read(Long id) {
-		return bannerRepository.findById(id).get();
+		return bannerRepository.findById(id).orElseThrow();
 	}
 	
 	public Banner update(Banner banner, Long id) {

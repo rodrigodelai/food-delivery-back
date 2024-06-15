@@ -5,104 +5,97 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.ObjectNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.delai.model.OptionsList;
 import com.delai.repository.OptionsListRepository;
+import com.delai.repository.ProductRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class OptionsListService {
 
+	@Autowired
+	private ProductRepository productRepository;
+	
 	@Autowired
 	private OptionsListRepository optionsListRepository;
 	
 	@Autowired
 	private OptionService optionService;
 	
-	private Logger logger = LoggerFactory.getLogger(OptionsListService.class);
-	
+	@Transactional
 	public OptionsList create(OptionsList optionsList) {
-		
-		// Check if optionsList with the same attributes already exists
-		logger.debug("Checking if optionsList already exists...");
-		
-		var potentialMatches = optionsListRepository.findByName(optionsList.getName());
-		
-		logger.debug("Potential matches: " + potentialMatches.get().stream().map(pm -> pm.getId()).toList().toString());
-		
-		if (!potentialMatches.get().isEmpty()) {
-			
-			var match = potentialMatches.get().stream().filter(ol -> ol.getOptions().equals(optionsList.getOptions() != null ? optionsList.getOptions() : new HashSet<>())).toList();
-			
-			if (!match.isEmpty()) {
-				logger.debug("OptionsList alredy exists: " + match.get(0).getName());
-				
-				return match.get(0);
-			}
-		}
-		
-		
-		// If not, first create its children
-		logger.debug("No match found. Creating optionsList...");
-
+		// Check if its children already exists
 		if (optionsList.getOptions() != null) {
-			logger.debug("Creating options...");
-			
-			var options = optionsList.getOptions().stream().map(optionService::create).collect(Collectors.toSet());
-			optionsList.setOptions(options);
+			var options = optionsList.getOptions().stream().map(option -> optionService.read(option.getId())).collect(Collectors.toSet()); 
+			optionsList.setOptions(options);	
 		}
 		
-		// Then, save it
-		logger.debug("Saving optionsList...");
+		// Check if record with the same attributes already exists
+		var optionsListFound = this.find(optionsList);
 		
+		if (optionsListFound != null)
+			throw new RuntimeException("409 (Conflict) - Record already exists: '" + optionsListFound.getName() + " # " + optionsListFound.getId() + "'.");
+		
+		// If it's all good, save it
+		optionsList.setId(null);
 		return optionsListRepository.save(optionsList);
 	}
 	
 	public OptionsList read(Long id) {
-		return optionsListRepository.findById(id).get();
+		return optionsListRepository.findById(id).orElseThrow(() -> new RuntimeException("404 (NotFound) - Record with the given ID was not found: '# " + id + "'."));
+	}
+	
+	public OptionsList find(OptionsList optionsList) {	
+		var potentialMatches = optionsListRepository.findByName(optionsList.getName()).orElse(new ArrayList<>());
+		
+		if (!potentialMatches.isEmpty()) {
+			var match = potentialMatches.stream().filter(ol -> ol.getOptions().equals(optionsList.getOptions() != null ? optionsList.getOptions() : new HashSet<>())).toList();
+			
+			if (!match.isEmpty())
+				return match.get(0);
+		}
+		
+		return null;
 	}
 	
 	public OptionsList update(OptionsList optionsList, Long id) {
-		var optionsListFound = optionsListRepository.findById(id);
+		var optionsListFound = this.read(id);
+		optionsListFound.setOptions(null);
 		
-		if (optionsListFound.isEmpty())
-			throw new ObjectNotFoundException(id, "OptionsList");
+		// Check if its children already exists
+		if (optionsList.getOptions() != null) {
+			var options = optionsList.getOptions().stream().map(option -> optionService.read(option.getId())).collect(Collectors.toSet()); 
+			optionsListFound.setOptions(options);
+		}
 		
-		optionsListFound.get().setName(optionsList.getName());
-		optionsListFound.get().setOptions(optionsList.getOptions());
+		// Copy new values
+		optionsListFound.setName(optionsList.getName());
 		
-		return optionsListRepository.save(optionsListFound.get());
+		// Check if record with the same attributes already exists
+		var newOptionsListFound = this.find(optionsListFound);
+		
+		if (newOptionsListFound != null && newOptionsListFound.getId() != id)
+			throw new RuntimeException("409 (Conflict) - Record alredy exists: '" + newOptionsListFound.getName() + " # " + newOptionsListFound.getId() + "'.");
+				
+		// If it's all good, save it
+		return optionsListRepository.save(optionsListFound);
 	}
 	
 	public void delete(Long id) {
 		// First, delete the associations
-		logger.debug("Deleting associations...");
-		
-		var found = optionsListRepository.findById(id);
-		
-		if (found.isPresent()) {
-			found.get().setOptions(null);
-			optionsListRepository.save(found.get());
-		}
+		var optionsList = this.read(id);
+		this.removeOptionsFromOptionsList(optionsList);
+		this.removeOptionsListFromProducts(optionsList);
 		
 		// Then, delete it
-		logger.debug("Deleting optionsList...");
 		optionsListRepository.deleteById(id);
 	}
-	
-	public OptionsList addOptions(List<Long> optionsIds, Long optionsListId) {
-		var optionsList = optionsListRepository.findById(optionsListId).orElseThrow(() -> new ObjectNotFoundException(optionsListId, "OptionsList"));
-		var options = optionsList.getOptions();
-		
-		optionsIds.forEach(option -> options.add(optionService.read(option)));
-		
-		return optionsListRepository.save(optionsList);
-	}
-	
+
+	@Transactional
 	public List<OptionsList> createMultiple(List<OptionsList> optionsLists) {
 		List<OptionsList> saved = new ArrayList<>();
 		optionsLists.forEach(optionsList -> saved.add(create(optionsList)));
@@ -116,5 +109,32 @@ public class OptionsListService {
 	public void deleteMultiple(List<Long> optionsListIds) {
 		optionsListIds.forEach(this::delete);
 	}	
+	
+	public OptionsList addOptions(List<Long> optionsIds, Long optionsListId) {
+		var optionsList = this.read(optionsListId);
+		var options = optionsList.getOptions();
+		
+		optionsIds.forEach(option -> options.add(optionService.read(option)));
+		
+		return optionsListRepository.save(optionsList);
+	}
+	
+	private void removeOptionsFromOptionsList(OptionsList optionsList) {
+		if (!optionsList.getOptions().isEmpty()) {
+			optionsList.setOptions(null);
+			optionsListRepository.save(optionsList);			
+		}
+	}
+	
+	private void removeOptionsListFromProducts(OptionsList optionsList) {
+		var products = productRepository.findByOptionsList(optionsList).orElse(new ArrayList<>());
+		
+		if (!products.isEmpty()) {
+			products.forEach(product -> {
+				product.getOptionsLists().remove(optionsList);
+				productRepository.save(product);
+			});
+		}
+	}
 	
 }
