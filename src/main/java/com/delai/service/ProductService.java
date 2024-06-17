@@ -84,13 +84,16 @@ public class ProductService {
 	}	
 	
 	public void delete(Long id) {
-		// First, delete the associations
-		var productFound = this.read(id);
-		this.removeOptionsListsFromProduct(productFound);
-		this.removeProductFromCategories(productFound);
+		var productFound = productRepository.findById(id).orElse(null);
 		
-		// Then, delete it
-	 	productRepository.delete(productFound);
+		if (productFound != null) {
+			// First, delete the associations
+			this.removeOptionsListsFromProduct(productFound);
+			this.removeProductFromCategories(productFound);
+			
+			// Then, delete it
+		 	productRepository.delete(productFound);	
+		}
 	}
 
 	@Transactional
@@ -111,9 +114,7 @@ public class ProductService {
 	public Product addOptionsLists(List<Long> optionsListsIds, Long productId) {
 		var product = this.read(productId);
 		
-		optionsListsIds.forEach(optionsListId -> {
-			product.getOptionsLists().add(optionsListService.read(optionsListId));
-		});
+		optionsListsIds.forEach(optionsListId -> product.getOptionsLists().add(optionsListService.read(optionsListId)));
 		
 		return productRepository.save(product);
 	}

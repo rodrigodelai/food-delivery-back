@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.delai.model.OptionsList;
+import com.delai.model.Product;
 import com.delai.repository.OptionsListRepository;
 import com.delai.repository.ProductRepository;
 
@@ -28,9 +29,10 @@ public class OptionsListService {
 	
 	@Transactional
 	public OptionsList create(OptionsList optionsList) {
+		
 		// Check if its children already exists
 		if (optionsList.getOptions() != null) {
-			var options = optionsList.getOptions().stream().map(option -> optionService.read(option.getId())).collect(Collectors.toSet()); 
+			var options = optionsList.getOptions().stream().map(option -> optionService.read(option.getId())).collect(Collectors.toSet());
 			optionsList.setOptions(options);	
 		}
 		
@@ -41,6 +43,25 @@ public class OptionsListService {
 			throw new RuntimeException("409 (Conflict) - Record already exists: '" + optionsListFound.getName() + " # " + optionsListFound.getId() + "'.");
 		
 		// If it's all good, save it
+		optionsList.setId(null);
+		return optionsListRepository.save(optionsList);
+	}
+	
+	@Transactional
+	public OptionsList createIfNotExists(OptionsList optionsList) {	
+		// Check if its children already exists
+		if (optionsList.getOptions() != null) {
+			var options = optionsList.getOptions().stream().map(option -> optionService.read(option.getId())).collect(Collectors.toSet()); 
+			optionsList.setOptions(options);	
+		}
+		
+		// Check if record with the same attributes already exists
+		var optionsListFound = this.find(optionsList);
+		
+		if (optionsListFound != null)
+			return optionsListFound;
+		
+		// If it's all good and not found, save it
 		optionsList.setId(null);
 		return optionsListRepository.save(optionsList);
 	}
@@ -78,7 +99,7 @@ public class OptionsListService {
 		// Check if record with the same attributes already exists
 		var newOptionsListFound = this.find(optionsListFound);
 		
-		if (newOptionsListFound != null && newOptionsListFound.getId() != id)
+		if (newOptionsListFound != null && !newOptionsListFound.getId().equals(id))
 			throw new RuntimeException("409 (Conflict) - Record alredy exists: '" + newOptionsListFound.getName() + " # " + newOptionsListFound.getId() + "'.");
 				
 		// If it's all good, save it
@@ -86,13 +107,16 @@ public class OptionsListService {
 	}
 	
 	public void delete(Long id) {
-		// First, delete the associations
-		var optionsList = this.read(id);
-		this.removeOptionsFromOptionsList(optionsList);
-		this.removeOptionsListFromProducts(optionsList);
+		var optionsListFound = optionsListRepository.findById(id).orElse(null);
 		
-		// Then, delete it
-		optionsListRepository.deleteById(id);
+		if (optionsListFound != null) {
+			// First, delete the associations
+			this.removeOptionsFromOptionsList(optionsListFound);
+			this.removeOptionsListFromProducts(optionsListFound);
+			
+			// Then, delete it
+			optionsListRepository.delete(optionsListFound);
+		}
 	}
 
 	@Transactional
@@ -135,6 +159,16 @@ public class OptionsListService {
 				productRepository.save(product);
 			});
 		}
+	}
+
+	public boolean containsOptionList(Product product, OptionsList optionsList) {
+		var optionsLists = product.getOptionsLists();
+		var found = optionsLists.stream()
+				.filter(ol -> ol.getName().equals(optionsList.getName()) &&
+					ol.getOptions().containsAll(optionsList.getOptions()))
+				.toList();
+		
+		return !found.isEmpty();
 	}
 	
 }

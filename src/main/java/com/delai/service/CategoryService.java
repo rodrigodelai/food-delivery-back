@@ -82,12 +82,15 @@ public class CategoryService {
 	}
 	
 	public void delete(Long id) {
-		// First, delete the associations
-		var categoryFound = this.read(id);
-		this.removeProductsFromCategory(categoryFound);
+		var categoryFound = categoryRepository.findById(id).orElse(null);
 		
-		// Then, delete it
-		categoryRepository.deleteById(id);
+		if (categoryFound != null) {
+			// First, delete the associations
+			this.removeProductsFromCategory(categoryFound);
+			
+			// Then, delete it
+			categoryRepository.delete(categoryFound);
+		}
 	}
 	
 	@Transactional
@@ -109,9 +112,7 @@ public class CategoryService {
 		var category = this.read(categoryId);
 		var products = category.getProducts();
 		
-		productIds.forEach(id -> {
-			products.add(productService.read(id));
-		});
+		productIds.forEach(id -> products.add(productService.read(id)));
 		
 		return categoryRepository.save(category);
 	}

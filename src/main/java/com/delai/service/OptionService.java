@@ -59,12 +59,15 @@ public class OptionService {
 	}
 	
 	public void delete(Long id) {
-		// First, delete the associations
-		var option = this.read(id);
-		this.removeOptionFromLists(option);
+		var optionFound = optionRepository.findById(id).orElse(null);
 		
-		// Then, delete it
-		optionRepository.deleteById(id);
+		if (optionFound != null) {
+			// First, delete the associations
+			this.removeOptionFromLists(optionFound);
+			
+			// Then, delete it
+			optionRepository.delete(optionFound);
+		}
 	}
 	
 	@Transactional
