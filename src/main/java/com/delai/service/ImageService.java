@@ -11,12 +11,15 @@ import org.springframework.web.multipart.MultipartFile;
 import com.delai.model.Image;
 import com.delai.repository.ImageRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class ImageService {
 
 	@Autowired
 	private ImageRepository imageRepository;
 	
+	@Transactional
 	public String upload(MultipartFile imageFile) throws IOException {
         var imageToSave = new Image(null, imageFile.getOriginalFilename(), 
         							imageFile.getContentType(),imageFile.getBytes()); 
@@ -26,6 +29,7 @@ public class ImageService {
         return "File uploaded: " + imageFile.getOriginalFilename() + " (" + imageFile.getSize() + " bytes).";
     }
 
+	@Transactional
     public byte[] download(String imageName) {
         Optional<Image> dbImage = imageRepository.findByName(imageName);
         
@@ -35,6 +39,7 @@ public class ImageService {
         return new byte[0];
     }
 	
+    @Transactional
     public void delete(String imageName) {
 		imageRepository.deleteByName(imageName);
 	}
