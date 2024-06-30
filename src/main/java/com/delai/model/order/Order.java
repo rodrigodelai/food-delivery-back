@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,7 +37,7 @@ public class Order {
 	private BigDecimal deliveryFee;
 	private BigDecimal taxes;
 	
-	@OneToMany
+	@OneToMany(fetch = FetchType.EAGER)
 	private List<OrderItem> items;
 	
 }

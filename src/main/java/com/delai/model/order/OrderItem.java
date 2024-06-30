@@ -6,6 +6,7 @@ import java.util.List;
 import com.delai.model.Product;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,10 +32,10 @@ public class OrderItem {
 	private Integer quantity;
 	private String notes;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	private Product product;
 	
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER)
 	private List<OrderOptionsList> orderOptionsLists;
 	
 }

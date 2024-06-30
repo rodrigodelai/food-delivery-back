@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,7 +31,7 @@ public class Product {
 	private BigDecimal price;
 	private BigDecimal promoPrice;
 	
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER)
 	@EqualsAndHashCode.Exclude
 	private List<OptionsList> optionsLists;
 	
