@@ -45,7 +45,24 @@ public class ImageService {
 	}
 
 	public List<String> list() {
-		return imageRepository.findAll().stream().map(image -> image.getName()).toList();
+		return imageRepository.findAll().stream().map(Image::getName).toList();
+	}
+
+	public List<String> uploadMultiple(List<MultipartFile> files) {
+		return files.stream()
+				.map(file -> {
+					try {
+						return upload(file);
+					} 
+					catch (IOException e) {
+						return "Not uploaded (error): " + file.getName();
+					}
+				})
+				.toList();
+	}
+
+	public void deleteMultiple(List<String> imageNames) {
+		imageNames.forEach(this::delete);
 	}
 
 }
