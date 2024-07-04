@@ -70,6 +70,7 @@ public class ProductService {
 		// Copy new values
 		productFound.setName(product.getName());
 		productFound.setDescription(product.getDescription());
+		productFound.setImageName(product.getImageName());
 		productFound.setPrice(product.getPrice());
 		productFound.setPromoPrice(product.getPromoPrice());
 		
