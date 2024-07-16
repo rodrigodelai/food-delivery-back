@@ -61,6 +61,7 @@ public class ImageService {
 				.toList();
 	}
 
+	@Transactional
 	public void deleteMultiple(List<String> imageNames) {
 		imageNames.forEach(this::delete);
 	}
